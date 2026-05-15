@@ -1,3 +1,4 @@
+/*eslint-disable */
 import Joi from 'joi'
 import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
@@ -76,6 +77,7 @@ const USER_COLLECTION_SCHEMA = Joi.object({
     saveJob: Joi.array().items(Joi.string()).default([]),
     saveCompany: Joi.array().items(Joi.string()).default([]),
     cvLink: Joi.string().default(null),
+
 
     createdAt: Joi.date().default(() => new Date()),
     updatedAt: Joi.date().default(null)

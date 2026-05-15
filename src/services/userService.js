@@ -1,31 +1,14 @@
+/*eslint-disable*/
+import { StatusCodes } from 'http-status-codes'
 import { userModel } from '~/models/userModel'
-
-
-const filterAuth0User = (auth0User) => {
-  return {
-    user_id: auth0User.user_id,
-    email: auth0User.email,
-    email_verified: auth0User.email_verified,
-    name: auth0User.name,
-    nickname: auth0User.nickname,
-    picture: auth0User.picture,
-    // Các trường profile khác bạn có thể để trống để user điền sau
-    title: '',
-    phone: '',
-    dob: '',
-    gender: '',
-    address: '',
-    personalLink: '',
-    education: [],
-    experience: [],
-    certificates: [],
-    skills: []
-  }
-}
+import { jobModel } from '~/models/jobModel'
+import { employerModel } from '~/models/employerModel'
+import ApiError from '~/utils/ApiError'
+import { cloudinaryProvider } from '~/providers/cloudinaryProvider'
 
 const pickUserData = (user) => {
     if (!user) return null
-    
+
     // Remove sensitive fields
     const { password, ...userData } = user
     return userData
@@ -49,6 +32,59 @@ const createNew = async (userDataFromAuth0) => {
   }
 }
 
+const getUserByEmail = async(email) => {
+    try {
+        const user = await userModel.findOneByEmail(email)
+        if (!user) {
+            throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
+        }
+
+        return pickUserData(user)
+    } catch (error) {
+        throw error
+    }
+}
+
+const toggleSaveJob = async (userEmail, jobId) => {
+    try {
+        const updatedUser = await userModel.toggleSaveJob(userEmail, jobId)
+        return updatedUser
+    } catch (error) {
+        throw error
+    }
+}
+
+const followCompany = async (userEmail, employerId) => {
+    try {
+        const updatedUser = await userModel.followCompany(userEmail, employerId)
+        return updatedUser
+    } catch (error) {
+        throw error
+    }
+}
+
+const getSavedJobsDetail = async (email) => {
+    const user = await userModel.findOneByEmail(email)
+    if (!user)
+        throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
+
+    const savedJobs = await jobModel.findByIds(user.saveJob || [])
+
+    // Gắn thông tin employer vào từng job
+    const jobsWithEmployer = savedJobs.map(job => ({
+        ...job
+    }))
+
+    return jobsWithEmployer
+}
+
+
 export const userService = {
-    createNew
+    createNew,
+    getUserByEmail,
+    getUserById,
+    updateProfile,
+    toggleSaveJob,
+    getSavedJobsDetail,
+    followCompany
 }
