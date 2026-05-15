@@ -14,76 +14,22 @@ const pickUserData = (user) => {
     return userData
 }
 
-const validateFile = (file) => {
-    if (!file) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, 'Vui lòng gửi file CV')
+const createNew = async (userDataFromAuth0) => {
+  try {
+    const filteredUser = filterAuth0User(userDataFromAuth0)
+
+    const existingUser = await userModel.findOneByEmail(filteredUser.email)
+    if (existingUser) {
+      return pickUserData(existingUser)
     }
-    const fileExtension = file.originalname.split('.').pop().toLowerCase()
-    if (!['pdf', 'docx'].includes(fileExtension)) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, 'Chỉ chấp nhận file PDF hoặc DOCX')
-    }
-    if (file.size > 5 * 1024 * 1024) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, 'File phải nhỏ hơn 5MB')
-    }
-    return fileExtension
-}
 
-const createNew = async(userData) => {
-    try {
-        // Check if user already exists
-        const existingUser = await userModel.findOneByEmail(userData.email)
-        if (existingUser) {
-            return pickUserData(existingUser)
-        }
+    const newUser = await userModel.createNew(filteredUser)
+    const createdUser = await userModel.findOneById(newUser.insertedId)
 
-        // Create new user
-        const newUser = await userModel.createNew(userData)
-        const createdUser = await userModel.findOneById(newUser.insertedId)
-
-        return pickUserData(createdUser)
-    } catch (error) {
-        throw error
-    }
-}
-
-const updateProfile = async (userId, profileData, cvFile) => {
-    try {
-        const user = await userModel.findOneById(userId)
-        if (!user)
-            throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
-    
-
-        let updatedUser = {}
-        if (cvFile)
-        {
-            const fileExtension = validateFile(cvFile)
-            const uploadResult = await cloudinaryProvider.streamUpLoadForCV(cvFile.buffer, 'cv', fileExtension)
-            updatedUser = await userModel.update(userId, {
-                cvLink: uploadResult.secure_url
-            })
-        } 
-        else {
-            updatedUser = await userModel.update(userId, profileData)
-
-        }
-
-        return pickUserData(updatedUser)
-    } catch (error) {
-        throw error
-    }
-}
-
-const getUserById = async (userId) => {
-    try {
-        const user = await userModel.findOneById(userId)
-        if (!user) {
-            throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
-        }
-
-        return pickUserData(user)
-    } catch (error) {
-        throw error
-    }
+    return pickUserData(createdUser)
+  } catch (error) {
+    throw error
+  }
 }
 
 const getUserByEmail = async(email) => {
