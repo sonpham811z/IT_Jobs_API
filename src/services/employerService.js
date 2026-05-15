@@ -15,6 +15,7 @@ import { toArray } from 'lodash'
 import { pickDataEmployer } from '~/utils/formatter'
 import ms from 'ms'
 import { cloudinaryProvider } from '~/providers/cloudinaryProvider'
+import { jobModel } from '~/models/jobModel'
 
 const generateHtmlContent = (verificationLink) => {
     return `
@@ -239,10 +240,51 @@ const getEmployerById = async(employerId) => {
     }
 }
 
+
+const getRandomEmployers = async () => {
+    try {
+      // Lấy danh sách nhà tuyển dụng ngẫu nhiên
+      const employers = await employerModel.findRandomEmployers();
+  
+      if (!employers.length) return [];
+  
+      // Lấy employerIds để đếm số công việc
+      const employerIds = employers.map((employer) => employer._id.toString());
+  
+      // Đếm số công việc cho từng employerId bằng findByEmployerId
+      const jobCounts = await Promise.all(
+        employerIds.map(async (employerId) => {
+          const jobs = await jobModel.findByEmployerId(employerId);
+          return { employerId, jobCount: jobs.length };
+        })
+      );
+  
+      // Tạo map để tra cứu nhanh jobCount theo employerId
+      const jobCountMap = jobCounts.reduce((map, { employerId, jobCount }) => {
+        map[employerId] = jobCount;
+        return map;
+      }, {});
+  
+      // Định dạng dữ liệu và thêm jobCount
+      const formattedEmployers = employers.map((employer) => {
+        const employerIdStr = employer._id.toString();
+        const jobCount = jobCountMap[employerIdStr] || 0; // Mặc định là 0 nếu không có công việc
+        
+        return pickDataEmployer({ ...employer, jobCount }); // Bỏ .toObject() nếu employer đã là plain object
+      });
+  
+      return formattedEmployers;
+    } catch (error) {
+      console.error("Error in getRandomEmployers:", error);
+      throw new Error(`Failed to fetch random employers: ${error.message}`);
+    }
+  };
+
 export const employerService = {
     createNew,
     login,
     verify,
     updateEmployer,
-    getEmployerById
+    getEmployerById,
+    getRandomEmployers
 }

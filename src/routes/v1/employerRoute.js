@@ -21,6 +21,9 @@ Router.route('/logout')
 Router.route('/refresh_token')
     .put(employerController.refreshToken)
 
+Router.route('/getEmployer')
+    .get(employerController.getRandomEmployers)
+
 Router.route('/updateEmployer')
     .put(authMiddleware.isAuthorized, uploadMiddleware.upload.fields([
         { name: 'logo', maxCount: 1 },

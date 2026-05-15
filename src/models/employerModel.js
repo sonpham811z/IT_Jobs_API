@@ -25,7 +25,7 @@ const EMPLOYER_COLLECTION_SCHEMA = Joi.object({
     tokenLinkExpiration: Joi.date().timestamp('javascript'),
 
     logoURL: Joi.string(),
-    backgroundURl: Joi.string(),
+    backgroundURL: Joi.string(),
 
     createAt: Joi.date().timestamp('javascript').default(Date.now),
     updateAt: Joi.date().timestamp('javascript').default(null),
@@ -80,11 +80,35 @@ const update = async (employerId, employerData) => {
     }
 }
 
+const findByIds = async (ids) => {
+    const objectIds = ids.map(id => new ObjectId(id))
+    return await GET_DB().collection('employers')
+        .find({ _id: { $in: objectIds } })
+        .toArray()
+}
+
+const findRandomEmployers = async () => {
+    try {
+        const employers = await GET_DB()
+            .collection(EMPLOYER_COLLECTION_NAME)
+            .aggregate([{ $sample: { size: 5 } }])
+            .toArray()
+
+        console.log("heheh")
+        return employers
+    } catch (error) {
+        throw new Error(error)
+    }
+}
+
+
 export const employerModel = {
     EMPLOYER_COLLECTION_NAME,
     EMPLOYER_COLLECTION_SCHEMA,
     createNew,
     findOneByEmail,
     findOneById,
-    update
+    update,
+    findByIds,
+    findRandomEmployers
 }

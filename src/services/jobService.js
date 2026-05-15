@@ -44,9 +44,53 @@ const getJobsByEmployerId = async(employerId) => {
     }
 }
 
+const getAllJobs = async (filters = {}, sortBy = 'newest', page = 1, limit = 10) => {
+    try {
+        // Chuẩn bị bộ lọc
+        const filterOptions = {}
+        if (filters.skills) filterOptions.skills = filters.skills
+        if (filters.city) filterOptions.city = filters.city
+        if (filters.acceptFresher !== undefined) filterOptions.acceptFresher = filters.acceptFresher === 'true'
+        if (filters.jobType) filterOptions.jobType = filters.jobType
+
+        // Chuẩn bị sắp xếp
+        const sortOptions = {}
+        switch (sortBy) {
+        case 'newest':
+            sortOptions.createdAt = -1
+            break
+        case 'salary_high':
+            sortOptions['salary.max'] = -1
+            break
+        case 'applicants':
+            sortOptions.applicantsCount = 1
+            break
+        default:
+            sortOptions.createdAt = -1
+        }
+
+        // Chuẩn bị phân trang
+        const pagination = {
+            skip: (page - 1) * limit,
+            limit: parseInt(limit)
+        }
+
+        const { jobs, totalJobs } = await jobModel.getJobsWithFilters(filterOptions, sortOptions, pagination)
+
+        return {
+            jobs,
+            totalJobs,
+            totalPages: Math.ceil(totalJobs / limit),
+            currentPage: parseInt(page)
+        }
+    } catch (error) {
+        throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Không thể lấy danh sách job')
+    }
+}
+
 export const jobService= {
     createNew,
-    // getAllJobs,
+    getAllJobs,
     getJobById,
     getJobsByEmployerId
 }

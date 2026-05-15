@@ -8,7 +8,6 @@ import { employerModel } from '~/models/employerModel'
 
 const createNew = async (req, res, next) => {
     try {
-        console.log('hehehe')
         const createEmployer = await employerService.createNew(req.body)
         res.status(StatusCodes.CREATED).json(createEmployer)
     } catch (error) {
@@ -18,7 +17,6 @@ const createNew = async (req, res, next) => {
 
 const verify = async (req, res, next) => {
     try {
-        console.log('hehehe')
         const result = await employerService.verify(req.body)
         res.status(StatusCodes.CREATED).json(result)
     } catch (error) {
@@ -29,7 +27,6 @@ const verify = async (req, res, next) => {
 const login = async (req, res, next) => {
     try {
         const result = await employerService.login(req.body)
-        console.log('hehehe')
         // Trả về 2 token cho FE (JWT)
         res.cookie('accessToken', result.accessToken, {
             secure: true,
@@ -52,7 +49,6 @@ const login = async (req, res, next) => {
 
 const logout = async(req, res, next) => {
     try {
-        console.log('hehehe')
         res.clearCookie('accessToken')
         res.clearCookie('refreshToken')
         res.status(StatusCodes.OK).json({ message: 'log out successfully' })
@@ -63,7 +59,6 @@ const logout = async(req, res, next) => {
 
 const refreshToken = async(req, res, next) => {
     try {
-        console.log('hehehe')
         const refreshToken = req.cookies?.refreshToken
 
         const refreshTokenDecoded = await JwtProvider.verifyToken(refreshToken, env.REFRESH_TOKEN_SIGNATURE)
@@ -107,6 +102,16 @@ const getEmployerById = async(req, res, next) => {
         next(error)
     }
 }
+
+const getRandomEmployers = async (req, res, next) => {
+    try {
+        const data = await employerService.getRandomEmployers()
+        res.status(StatusCodes.OK).json(data)
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const employerController = {
     createNew,
     login,
@@ -114,5 +119,6 @@ export const employerController = {
     logout,
     refreshToken,
     updateEmployer,
-    getEmployerById
+    getEmployerById,
+    getRandomEmployers
 }

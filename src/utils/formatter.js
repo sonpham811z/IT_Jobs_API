@@ -19,5 +19,5 @@ export const slugify = (val) => {
 export const pickDataEmployer = (data) => {
   if(!data)
     return {}
-  return pick(data, ['_id','email','fullName','phoneNumber', 'position', 'workEmail' ,'companyName', 'companyLocation', 'isActive', 'companyURL', 'companyCountry' ,'createAt', 'updateAt', 'backgroundURL', 'logoURL', 'linkedln', 'industry', 'companySize','companyDescription', 'companyAddress', 'companyTitle', 'overtimeRequired','workDaysEnd', 'workDaysStart', 'companySize'])
+  return pick(data, ['jobCount','_id','email','fullName','phoneNumber', 'position', 'workEmail' ,'companyName', 'companyLocation', 'isActive', 'companyURL', 'companyCountry' ,'createAt', 'updateAt', 'backgroundURL', 'logoURL', 'linkedln', 'industry', 'companySize','companyDescription', 'companyAddress', 'companyTitle', 'overtimeRequired','workDaysEnd', 'workDaysStart', 'companySize'])
 }

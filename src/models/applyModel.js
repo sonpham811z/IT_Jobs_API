@@ -23,6 +23,8 @@ const APPLY_COLLECTION_SCHEMA = Joi.object({
     phoneNumber: Joi.string(),
     cvUrl: Joi.string(),
     status: Joi.string(),
+    phase: Joi.string().valid('pending', 'test', 'interview', 'end').default('pending'),
+    testRound: Joi.number().default(1),
     createdAt: Joi.date().timestamp('javascript').default(Date.now),
     updatedAt: Joi.date().timestamp('javascript').default(null),
     _destroy: Joi.boolean().default(false)
@@ -46,15 +48,62 @@ const findByEmail = async (email) => {
 }
 
 const findByJobId = async (jobId) => {
-    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ jobId: new ObjectId(jobId) }).toArray()
+    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ jobId: new ObjectId(jobId), _destroy: false }).toArray()
 }
 
 const findByEmployerId = async (employerId) => {
-    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ employerId: new ObjectId(employerId) }).toArray()
+    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ employerId: new ObjectId(employerId), _destroy: false }).toArray()
+}
+
+
+const findApplicantInTestPhaseByEmployerId = async (employerId) => {
+    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ employerId: new ObjectId(employerId), _destroy: false, phase: 'pending', status: 'Accepted' }).toArray()
 }
 
 const checkIfApplied = async (email, jobId) => {
     return await GET_DB().collection(APPLY_COLLECTION_NAME).findOne({ email, jobId: new ObjectId(jobId) })
+}
+
+const update = async (applicantId, updateData) => {
+    try {
+        // Nếu status là Rejected, đánh dấu _destroy = true
+
+        if (updateData?.status === 'Rejected') {
+            updateData._destroy = true
+        }
+
+  
+        const result = await GET_DB()
+            .collection(APPLY_COLLECTION_NAME)
+            .findOneAndUpdate({ _id: new ObjectId(applicantId) }, { $set: updateData }, { returnDocument: 'after' })
+
+        return result
+    } catch (error) {
+        throw new Error(error)
+    }
+}
+
+const findOneById = async (applicationId) => {
+    try {
+        const application = await GET_DB()
+            .collection(APPLY_COLLECTION_NAME)
+            .findOne({ _id: new ObjectId(applicationId), _destroy: false })
+        return application
+    } catch (error) {
+        throw new Error(error)
+    }
+}
+
+const findApplicationByJobIdInInterviewPhase = async (jobId) => {
+    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ jobId: new ObjectId(jobId), _destroy: false, phase: 'interview' }).toArray()
+}
+
+const findApplicantsInInterviewPhaseByEmployerId = async (employerId) => {
+    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ employerId: new ObjectId(employerId), _destroy: false, phase: 'interview' }).toArray()
+}
+
+const findApplicantByEmployerId = async (employerId) => {
+    return await GET_DB().collection(APPLY_COLLECTION_NAME).find({ employerId: new ObjectId(employerId) }).toArray()
 }
 
 export const applyModel = {
@@ -63,5 +112,11 @@ export const applyModel = {
     findByEmail,
     findByJobId,
     findByEmployerId,
-    checkIfApplied
+    checkIfApplied,
+    update,
+    findOneById,
+    findApplicantInTestPhaseByEmployerId,
+    findApplicationByJobIdInInterviewPhase,
+    findApplicantsInInterviewPhaseByEmployerId,
+    findApplicantByEmployerId
 }

@@ -11,14 +11,19 @@ const Router = express.Router()
 Router.route('/createNewJob')
     .post(authMiddleware.isAuthorized, jobValidation.createNew, jobController.createNewJob)
 
+Router.route('/findJob')
+    .get(jobController.getAllJobs)
+
 Router.route('/by-employer/:employerId')
     .get(authMiddleware.isAuthorized, jobController.getJobsByEmployerId)
 
 Router.route('/getNewJobs')
     .get(jobController.getNewJobs)
 
+Router.route('/multiple')
+    .get(jobController.getJobsByIds)
+
 Router.route('/:id')
     .get( jobController.getJobById)
-
 
 export const jobRoute = Router
